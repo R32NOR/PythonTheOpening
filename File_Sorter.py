@@ -1,27 +1,51 @@
+# WELCOME TO File_Sorter!
+# This script will sort all the files in the catalogue you will choose into few categories.
+
+''' Below in dictionary named: "fileTypesDict" you can check what categories are predefined and what file extensions
+are assigned to each category.
+Feel free to add own categories or file extensions or move file extensions to other category.
+fileTypesDict.keys() are for the category names
+fileTypesDict.values() are for file extensions that are assigned to this category '''
+
+# !!!ATTENTION!!!
+# If there is directory named by the category (fe. if you used this script before) there is file with the same name
+# in category (destination) directory, it will be overwritten!!!
+
+# above will be upgraded in the future to choose what to do in such conflict, but now this script is just for my training.
+# it will be also upgrade with log file with the data and history of using.
+# ... someday :)
+
+# Bon apetit! | 2024 | R32NOR | anklebiters
+
+
 import os
 import shutil
 
-path=input('drop the directory path that you want to sort: ')
+path = input('drop the directory path that you want to sort: ')
 
-# Function that returns list with all filenames from chosen dir
+
 def file_list_receiver(directory):
-    # Initialize empty list to store the file names:
-    fileList=[]
+    """
+    FUNCTION: returns list with all filenames in chosen directory
+    :param directory: directory path where files have to be sorted
+    :return fileList: list of files in chosen directory (that are not folders)
+    """
+    fileList = []  # Initialize empty list to store the file names:
 
-    # iterate trough each file in dir
+    # below func iterates trough each file in dir- checking whether filename is a file (not a directory)
+    # add file to the fileList if it is a file:
     for fileName in os.listdir(directory):
-        # checking whether filename is a file (not a directory)
         if os.path.isfile(os.path.join(directory, fileName)):
-            # add file to the list:
             fileList.append(fileName)
-
-    # As a return we get list of files in directory and are not a directories
-    return fileList
+    return fileList  # Returns list of files
 
 
-# function that returns which category file is:
 def file_category(fileExtension):
-
+    """
+    FUNCTION: returns the category of file
+    :param fileExtension: file extension (without dot!)
+    :return fileCategory: category of file defined in fileTypesDict.keys() that corresponds to fileExtension parameter.
+    """
     # declaring groups of file types
     fileTypesDict = {
         'Images': ['png', 'jpg', 'bmp', 'gif'],
@@ -31,66 +55,69 @@ def file_category(fileExtension):
         'Video': ['mp4'],
         'Archive': ['rar', 'zip', '7z']
     }
-
-    # loop that returns type of file
+    # loop that returns the category of file
     for filetype in fileTypesDict.values():
         if fileExtension.lower() in filetype:
-            fileCategory = list(fileTypesDict.keys())[list(fileTypesDict.values()).index(filetype)]
+            fileCategory = list(fileTypesDict.keys())[list(fileTypesDict.values()).index(
+                filetype)]  # returns category name by searching the list with file extensions
             return fileCategory
         else:
             continue
     else:
-        fileCategory='Other'
+        fileCategory = 'Other'
     return fileCategory
 
-#function that creates category directory (if it doesnot exist)
+
 def create_category_dir(directory, fileCategory):
-    finalDir=os.path.join(directory, fileCategory) # final directory for current file category
+    """
+    FUNCTION: creates category directory (if it does not exist)
+    :param directory: directory path where files have to be sorted
+    :param fileCategory: Category of file- defined in func. file_category()
+    """
+    finalDir = os.path.join(directory, fileCategory)  # dirPath for current category
+    if not os.path.exists(finalDir):
+        os.makedirs(finalDir)  # creates category directory if it doesn't exist
 
-    if os.path.exists(finalDir)==True:
-        return finalDir
-    else:
-        os.makedirs(finalDir)
+
+def send_file_to_category_dir(dirPath, fileName, fileCategory):
+    """
+    FUNCTION: send file to appropriate category dir
+    :param dirPath: directory path where files have to be sorted
+    :param fileName: filename with file extension
+    :param fileCategory: Category of file- defined in func. file_category()
+    """
+    sourceFilePath = os.path.join(dirPath, fileName)  # chosen file path
+    destinationDirectoryPath = os.path.join(dirPath, fileCategory, fileName)  # destination folder
+    shutil.move(sourceFilePath, destinationDirectoryPath)  # sends file to destination folder
 
 
-# below we set function that we shuld input path to the directory and list of files
-def file_sorter (directory, listOfFiles):
-    fileExt=''  #variable that will contain file extension retrieved in below loop
+def file_sorter(path):
+    """
+    FUNCTION: main function- that sort files in chosen directory and deliver them to appropriate category dir
+    :parameter path: path to the directory and list of files
+    """
 
-    # taking each file in list of files
+    listOfFiles = file_list_receiver(path)  # gets list of files by running func: file_list_receiver
+    fileExt = ''  # variable that will contain file extension retrieved in below loop
+
+    # looping within list of files to sort each file:
     for file in listOfFiles:
-        # below we are looping for retrieving of file extension
-         fileNameLength = len(file)
-         dotFromBack = 1
 
-         for dotFromBack in range(1,fileNameLength):
-             if file[dotFromBack*(-1)] != '.':
-                 dotFromBack += 1
-             else:
-                 dotPosition=fileNameLength-dotFromBack
-                 fileExt = file[dotPosition+1:]
-                 #print(file, fileExt)
-                 fileCategory=file_category(fileExt)
-                 create_category_dir(path,fileCategory)
-                 sourceFilePath=os.path.join(path,file)
-                 destinationDirectoryPath=os.path.join(path,fileCategory)
-                 shutil.move(sourceFilePath, destinationDirectoryPath) # replace current file to final directory
-                 break
-
-# function call
-files=file_list_receiver(path) # list of file that is returned from f. file_list_receiver
-
-file_sorter(path, files)
+        fileNameLength = len(file)
+        dotFromBack = 1
+        # below loop gets the extension of file
+        for dotFromBack in range(1, fileNameLength):
+            if file[dotFromBack * (-1)] != '.':
+                dotFromBack += 1
+            else:
+                dotPosition = fileNameLength - dotFromBack
+                fileExt = file[dotPosition + 1:]  # here we get the extension of current file
+                fileCategory = file_category(
+                    fileExt)  # now script checks the category of file by using function: file_category()
+                create_category_dir(path,
+                                    fileCategory)  # creates category dir (if it doesn't exist) with f. create_category_dir()
+                send_file_to_category_dir(path, file, fileCategory)  # sending file to appropriate folder
+                break  # exits the current loop and takes next file
 
 
-
-
-
-
-
-
-
-
-
-
-
+file_sorter(path)  # starts sorting fuction
