@@ -1,2 +1,2 @@
-# PythonTheOpening
-First Python scripts
+# PythonTheOpening  
+Various Python scripts.
